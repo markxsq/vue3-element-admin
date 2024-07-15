@@ -1,5 +1,6 @@
 import request from "@/utils/request";
 import { ChartHouseDataVO, ChartHouseDataList } from "./model";
+import { format } from "date-fns";
 
 class HouseAPI {
   /**
@@ -7,9 +8,9 @@ class HouseAPI {
    *
    * @param dataType
    */
-  static getHouseData(dataType: number) {
+  static getHouseData(dataType: number, dataDate: Date) {
     return request<any, ChartHouseDataVO>({
-      url: "/house/" + dataType,
+      url: "/house/" + format(dataDate, "yyyy-MM-dd") + "/" + dataType,
       method: "get",
     });
   }

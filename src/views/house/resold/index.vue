@@ -29,6 +29,7 @@ import { useTransition, TransitionPresets } from "@vueuse/core";
 
 import HouseAPI from "@/api/house";
 import { ChartHouseDataVO } from "@/api/house/model";
+import { getDate } from "date-fns";
 
 const loading = ref(true); // 加载状态
 const chartHousedataList = ref<ChartHouseDataVO>();
@@ -40,9 +41,9 @@ const chartComponent = (item: string) => {
   return defineAsyncComponent(() => import(`../components/${item}.vue`));
 };
 
-async function handleQuery(dataType: number) {
+async function handleQuery(dataType: number, dataDate: Date) {
   loading.value = true;
-  await HouseAPI.getHouseData(dataType)
+  await HouseAPI.getHouseData(dataType, dataDate)
     .then((data) => {
       chartHousedataList.value = data as ChartHouseDataVO;
     })
@@ -52,7 +53,7 @@ async function handleQuery(dataType: number) {
 }
 
 onMounted(() => {
-  handleQuery(2);
+  handleQuery(2, new Date());
 });
 </script>
 

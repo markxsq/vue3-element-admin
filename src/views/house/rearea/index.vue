@@ -40,9 +40,9 @@ const chartComponent = (item: string) => {
   return defineAsyncComponent(() => import(`../components/${item}.vue`));
 };
 
-async function handleQuery(dataType: number) {
+async function handleQuery(dataType: number, dataDate: Date) {
   loading.value = true;
-  await HouseAPI.getHouseData(dataType)
+  await HouseAPI.getHouseData(dataType, dataDate)
     .then((data) => {
       chartHousedataList.value = data as ChartHouseDataVO;
     })
@@ -52,7 +52,7 @@ async function handleQuery(dataType: number) {
 }
 
 onMounted(() => {
-  handleQuery(6);
+  handleQuery(6, new Date());
 });
 </script>
 

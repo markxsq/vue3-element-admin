@@ -4,10 +4,14 @@ import { defineComponent, onMounted, reactive, ref, onBeforeMount } from "vue";
 import FullCalendar from "@fullcalendar/vue3";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import bootstrapPlugin from "@fullcalendar/bootstrap";
 
 import HouseAPI from "@/api/house";
 import { ChartHouseDataVO } from "@/api/house/model";
 import { log } from "console";
+
+import "bootstrap/dist/css/bootstrap.css";
+import "@fortawesome/fontawesome-free/css/all.css"; // needs additional webpack config!
 
 defineOptions({
   name: "",
@@ -133,10 +137,12 @@ const calendarOptions: any = reactive({
   plugins: [
     dayGridPlugin,
     interactionPlugin, // needed for dateClick
+    bootstrapPlugin,
   ],
   customButtons: {
     myCustomButton: {
       text: "",
+      class: "",
     },
   },
   headerToolbar: {
@@ -150,7 +156,6 @@ const calendarOptions: any = reactive({
   buttonText: {
     today: "今日",
   },
-  themeSystem: "bootstrap4",
   views: {
     dayGridMonth: {
       // name of view
@@ -159,10 +164,12 @@ const calendarOptions: any = reactive({
     },
   },
   initialDate: new Date(),
+  themeSystem: "bootstrap",
   showNonCurrentDates: false,
-  eventColor: "#378006",
-  // eventDisplay: 'none',
+  eventColor: "#52bb0c",
   height: "auto",
+  // contentHeight: 350,
+  // eventDisplay: 'none',
   firstDay: 1, // The day that each week begins. Sunday=0, Monday=1, Tuesday=2,
   fixedWeekCount: false,
   titleRangeSeparator: "-",
@@ -228,12 +235,20 @@ onMounted(() => {
 <style scoped>
 :root {
   --fc-daygrid-event-dot-width: 80px;
+  --fc-scrollgrid-section-stick: "";
 }
 
-.fc .fc-col-header-cell-cushion {
-  display: inline-block;
-  padding: 5px;
+/* .fc .fc-toolbar.fc-header-toolbar {
+  margin-bottom: 1.5em;
+  position: sticky;
+  top: 0;
+  background: #ffffff;
+  z-index: 100;
 }
+
+.fc .fc-scrollgrid-section-header.fc-scrollgrid-section-sticky>* {
+  top: 34px;
+} */
 
 h2 {
   margin: 0;
@@ -258,11 +273,7 @@ b {
 .demo-app {
   display: flex;
   min-height: 100%;
-  font-family:
-    Arial,
-    "Helvetica Neue",
-    Helvetica,
-    sans-serif;
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
   font-size: 14px;
 }
 

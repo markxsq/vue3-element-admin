@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { format } from "date-fns";
+import { format, addDays, compareAsc } from "date-fns";
 import { defineComponent, onMounted, reactive, ref, onBeforeMount } from "vue";
 import FullCalendar from "@fullcalendar/vue3";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -10,6 +10,7 @@ import HouseAPI from "@/api/house";
 import { ChartHouseDataVO } from "@/api/house/model";
 import { log } from "console";
 
+// install bootstrap@4 @fortawesome/fontawesome-free
 import "bootstrap/dist/css/bootstrap.css";
 import "@fortawesome/fontawesome-free/css/all.css"; // needs additional webpack config!
 
@@ -19,10 +20,14 @@ defineOptions({
 
 interface eventItem {
   id: String;
+  groupId?: String;
   title: String;
   start: String;
   end?: String;
   allDay?: boolean;
+  borderColor?: String;
+  backgroundColor?: String;
+  classNames?: Array<String>;
   // other properties...
 }
 
@@ -30,7 +35,7 @@ const loading = ref(true); // 加载状态
 const chartHousedataList = ref<ChartHouseDataVO>();
 // const monthCalendar = ref() as Ref<InstanceType<typeof FullCalendar>>
 const currentMonthData = ref(0);
-
+const currentMonthNewData = ref(0);
 const createEventId = (date: any): String => {
   return format(date, "yyyy-MM-dd");
   // return String(eventGuid++)
@@ -46,6 +51,10 @@ function handleDateSet(info: any) {
   ) {
     initialEventsFromRemote(info.view.calendar.currentData.currentDate);
   }
+}
+
+function getLastDayOfMonth(year: number, month: number): Date {
+  return new Date(year, month + 1, 0);
 }
 
 const handleDateClick = (info: any) => {
@@ -90,17 +99,27 @@ async function initialEventsFromRemote(date: Date) {
       chartHousedataList.value = data as ChartHouseDataVO;
       //initialEventsData.length = 0
       currentMonthData.value = 0;
+      currentMonthNewData.value = 0;
+      let currentLastDay: Date | null = null;
       chartHousedataList.value.xaxis.forEach((val, idx) => {
+        currentLastDay = new Date(val);
+        // 当月二手房销量
         currentMonthData.value += chartHousedataList.value?.series[0].chatData[
           idx
         ] as number;
+        // 当月新房总销量
+        currentMonthNewData.value += chartHousedataList.value?.series[1]
+          .chatData[idx] as number;
         let event: eventItem = {
           id: createEventId(val),
           title: String(
             chartHousedataList.value?.series[0].chatData[idx].toString()
           ),
-          start: val,
+          start: val, //.toString().replace(/T.*$/, '') + ' 00:00:00',
+          //backgroundColor: "red",
+          // other properties...
         };
+        //console.log(event);
         // 检查该数据是否已经存在
         if (
           initialEventsData.findIndex((val) => {
@@ -109,7 +128,85 @@ async function initialEventsFromRemote(date: Date) {
         ) {
           initialEventsData.push(event);
         }
+        // 当月新房销量
+        let newHouseEvent: eventItem = {
+          id: createEventId(val) + "new",
+          title: String(
+            chartHousedataList.value?.series[1].chatData[idx].toString()
+          ),
+          start: val,
+          borderColor: "#ff666600",
+          backgroundColor: "#ff666666",
+        };
+        // 检查该数据是否已经存在
+        if (
+          initialEventsData.findIndex((val) => {
+            return val.id === newHouseEvent.id;
+          }) === -1
+        ) {
+          initialEventsData.push(newHouseEvent);
+        }
       });
+
+      if (currentMonthData.value != 0) {
+        let lastDayofMonth = getLastDayOfMonth(
+          date.getFullYear(),
+          date.getMonth()
+        );
+        // 当月有数据的最后一天+1
+        if (
+          currentLastDay &&
+          compareAsc(addDays(currentLastDay, 1), lastDayofMonth) == -1
+        ) {
+          lastDayofMonth = addDays(currentLastDay, 1);
+        }
+        let monthTotalNumberEvent: eventItem = {
+          id: createEventId(lastDayofMonth) + "total",
+          title: "总:" + currentMonthData.value.toString(),
+          start: createEventId(lastDayofMonth),
+          //backgroundColor: '#00cc66',
+          // other properties...
+        };
+        // 检查该数据是否已经存在
+        if (
+          initialEventsData.findIndex((val) => {
+            return val.id === monthTotalNumberEvent.id;
+          }) === -1
+        ) {
+          initialEventsData.push(monthTotalNumberEvent);
+        }
+      }
+      if (currentMonthNewData.value != 0) {
+        let lastDayofMonth = getLastDayOfMonth(
+          date.getFullYear(),
+          date.getMonth()
+        );
+        // 当月有数据的最后一天+1
+        if (
+          currentLastDay &&
+          compareAsc(addDays(currentLastDay, 1), lastDayofMonth) == -1
+        ) {
+          lastDayofMonth = addDays(currentLastDay, 1);
+        }
+        let monthTotalNumberEvent: eventItem = {
+          id: createEventId(lastDayofMonth) + "newTotal",
+          title: "总:" + currentMonthNewData.value.toString().padEnd(5, " "),
+          start: createEventId(lastDayofMonth),
+          borderColor: "#ff666600",
+          backgroundColor: "#ff666666",
+          //classNames: ['total-data'],
+          // other properties...
+        };
+        // 检查该数据是否已经存在
+        if (
+          initialEventsData.findIndex((val) => {
+            return val.id === monthTotalNumberEvent.id;
+          }) === -1
+        ) {
+          initialEventsData.push(monthTotalNumberEvent);
+        }
+      }
+
       calendarOptions.initialEvents = initialEventsData;
       calendarOptions.initialDate = date;
       calendarOptions.customButtons.myCustomButton.text =
@@ -151,10 +248,10 @@ const calendarOptions: any = reactive({
     right: "today prev next",
   },
   footerToolbar: {
-    right: "myCustomButton",
+    //right: "myCustomButton",
   },
   buttonText: {
-    today: "今日",
+    today: "当月",
   },
   views: {
     dayGridMonth: {
@@ -166,7 +263,8 @@ const calendarOptions: any = reactive({
   initialDate: new Date(),
   themeSystem: "bootstrap",
   showNonCurrentDates: false,
-  eventColor: "#52bb0c",
+  eventColor: "#00aa66",
+  eventOrder: "start",
   height: "auto",
   // contentHeight: 350,
   // eventDisplay: 'none',
@@ -197,7 +295,7 @@ const calendarOptions: any = reactive({
 onBeforeMount(() => {
   // 异步读取当前显示日历对应的数据
   initialEventsFromRemote(new Date());
-
+  // $(".fc-center").append('<input type="text" id="datepicker"></input>');
   // let event: eventItem = {
   //   id: createEventId("2024-07-12"),
   //   title: "test",
@@ -228,6 +326,11 @@ onMounted(() => {
           </div>
         </template>
       </FullCalendar>
+      <!-- <div class="fc-dayGridMonth-view fc-view fc-daygrid">
+        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
+          sss
+        </div>
+      </div> -->
     </div>
   </div>
 </template>
@@ -276,6 +379,21 @@ b {
   font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
   font-size: 14px;
 }
+
+/* .fc-event-main {
+  text-align: center;
+  color: red;
+}
+
+.total-data {
+  text-align: center;
+  color: red;
+}
+
+a.fc-h-event a.fc-event-main {
+  color: blue;
+  text-align: center;
+} */
 
 .demo-app-sidebar {
   width: 300px;

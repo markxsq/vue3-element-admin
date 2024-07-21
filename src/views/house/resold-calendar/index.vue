@@ -28,6 +28,7 @@ interface eventItem {
   borderColor?: String;
   backgroundColor?: String;
   classNames?: Array<String>;
+  display?: String;
   // other properties...
 }
 
@@ -103,13 +104,14 @@ async function initialEventsFromRemote(date: Date) {
       let currentLastDay: Date | null = null;
       chartHousedataList.value.xaxis.forEach((val, idx) => {
         currentLastDay = new Date(val);
-        // 当月二手房销量
+        // 当月二手总销量
         currentMonthData.value += chartHousedataList.value?.series[0].chatData[
           idx
         ] as number;
         // 当月新房总销量
         currentMonthNewData.value += chartHousedataList.value?.series[1]
           .chatData[idx] as number;
+        // 当月二手房销量明细
         let event: eventItem = {
           id: createEventId(val),
           title: String(
@@ -128,7 +130,7 @@ async function initialEventsFromRemote(date: Date) {
         ) {
           initialEventsData.push(event);
         }
-        // 当月新房销量
+        // 当月新房销量明细
         let newHouseEvent: eventItem = {
           id: createEventId(val) + "new",
           title: String(
@@ -136,7 +138,9 @@ async function initialEventsFromRemote(date: Date) {
           ),
           start: val,
           borderColor: "#ff666600",
-          backgroundColor: "#ff666666",
+          backgroundColor: "#ff666688",
+          //backgroundColor: "#ffffff",
+          //display: "background",
         };
         // 检查该数据是否已经存在
         if (
@@ -148,6 +152,7 @@ async function initialEventsFromRemote(date: Date) {
         }
       });
 
+      // 当月二手房总计
       if (currentMonthData.value != 0) {
         let lastDayofMonth = getLastDayOfMonth(
           date.getFullYear(),
@@ -162,9 +167,12 @@ async function initialEventsFromRemote(date: Date) {
         }
         let monthTotalNumberEvent: eventItem = {
           id: createEventId(lastDayofMonth) + "total",
-          title: "总:" + currentMonthData.value.toString(),
+          title: "月总：" + currentMonthData.value.toString(),
           start: createEventId(lastDayofMonth),
-          //backgroundColor: '#00cc66',
+          borderColor: "#00aa6600",
+          //classNames: ['total-data'],
+          // other properties...
+          backgroundColor: "#00aa66",
           // other properties...
         };
         // 检查该数据是否已经存在
@@ -176,6 +184,7 @@ async function initialEventsFromRemote(date: Date) {
           initialEventsData.push(monthTotalNumberEvent);
         }
       }
+      // 当月新房总计
       if (currentMonthNewData.value != 0) {
         let lastDayofMonth = getLastDayOfMonth(
           date.getFullYear(),
@@ -190,10 +199,14 @@ async function initialEventsFromRemote(date: Date) {
         }
         let monthTotalNumberEvent: eventItem = {
           id: createEventId(lastDayofMonth) + "newTotal",
-          title: "总:" + currentMonthNewData.value.toString().padEnd(5, " "),
+          title:
+            "月总：" +
+            currentMonthNewData.value
+              .toString()
+              .padStart(5, String.fromCharCode(32)),
           start: createEventId(lastDayofMonth),
           borderColor: "#ff666600",
-          backgroundColor: "#ff666666",
+          backgroundColor: "#ff6666",
           //classNames: ['total-data'],
           // other properties...
         };
@@ -263,7 +276,8 @@ const calendarOptions: any = reactive({
   initialDate: new Date(),
   themeSystem: "bootstrap",
   showNonCurrentDates: false,
-  eventColor: "#00aa66",
+  eventBorderColor: "#00000000",
+  eventColor: "#00aa6699",
   eventOrder: "start",
   height: "auto",
   // contentHeight: 350,

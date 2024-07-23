@@ -5,6 +5,7 @@ import FullCalendar from "@fullcalendar/vue3";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import bootstrapPlugin from "@fullcalendar/bootstrap";
+import listPlugin from "@fullcalendar/list";
 
 import HouseAPI from "@/api/house";
 import { ChartHouseDataVO } from "@/api/house/model";
@@ -13,6 +14,7 @@ import { log } from "console";
 // install bootstrap@4 @fortawesome/fontawesome-free
 import "bootstrap/dist/css/bootstrap.css";
 import "@fortawesome/fontawesome-free/css/all.css"; // needs additional webpack config!
+import { aN } from "@fullcalendar/core/internal-common";
 
 defineOptions({
   name: "",
@@ -25,11 +27,19 @@ interface eventItem {
   start: String;
   end?: String;
   allDay?: boolean;
+  textColor?: String;
   borderColor?: String;
   backgroundColor?: String;
   classNames?: Array<String>;
   display?: String;
+  extendedProps?: {};
   // other properties...
+}
+
+interface iconDisplay {
+  type: string;
+  color: string;
+  display: boolean;
 }
 
 const loading = ref(true); // 加载状态
@@ -104,56 +114,79 @@ async function initialEventsFromRemote(date: Date) {
       let currentLastDay: Date | null = null;
       chartHousedataList.value.xaxis.forEach((val, idx) => {
         currentLastDay = new Date(val);
-        // 当月二手总销量
-        currentMonthData.value += chartHousedataList.value?.series[0].chatData[
+        // 当日数据
+        let currentDayData = chartHousedataList.value?.series[0].chatData[
           idx
         ] as number;
-        // 当月新房总销量
-        currentMonthNewData.value += chartHousedataList.value?.series[1]
-          .chatData[idx] as number;
-        // 当月二手房销量明细
-        let event: eventItem = {
-          id: createEventId(val),
-          title: String(
-            chartHousedataList.value?.series[0].chatData[idx].toString()
-          ),
-          start: val, //.toString().replace(/T.*$/, '') + ' 00:00:00',
-          //backgroundColor: "red",
-          // other properties...
-        };
-        //console.log(event);
-        // 检查该数据是否已经存在
-        if (
-          initialEventsData.findIndex((val) => {
-            return val.id === event.id;
-          }) === -1
-        ) {
-          initialEventsData.push(event);
-        }
-        // 当月新房销量明细
-        let newHouseEvent: eventItem = {
-          id: createEventId(val) + "new",
-          title: String(
-            chartHousedataList.value?.series[1].chatData[idx].toString()
-          ),
-          start: val,
-          borderColor: "#ff666600",
-          backgroundColor: "#ff666688",
-          //backgroundColor: "#ffffff",
-          //display: "background",
-        };
-        // 检查该数据是否已经存在
-        if (
-          initialEventsData.findIndex((val) => {
-            return val.id === newHouseEvent.id;
-          }) === -1
-        ) {
-          initialEventsData.push(newHouseEvent);
+        // 前一天数据
+        let lastDayData = chartHousedataList.value?.series[1].chatData[
+          idx
+        ] as number;
+        // 当日数据为0则不显示
+        if (currentDayData != 0) {
+          // 当月二手总销量
+          currentMonthData.value += currentDayData;
+          // 当月新房总销量
+          currentMonthNewData.value += chartHousedataList.value?.series[1]
+            .chatData[idx] as number;
+          // 当月二手房销量明细
+          let event: eventItem = {
+            id: createEventId(val),
+            title: String(
+              chartHousedataList.value?.series[0].chatData[idx].toString()
+            ),
+            start: val, //.toString().replace(/T.*$/, '') + ' 00:00:00',
+            // extendedProps: icon,
+            textColor: "black",
+            //allDay: false,
+            //backgroundColor: "red",
+            // other properties...
+          };
+          //console.log(event);
+          // 检查该数据是否已经存在
+          if (
+            initialEventsData.findIndex((val) => {
+              return val.id === event.id;
+            }) === -1
+          ) {
+            initialEventsData.push(event);
+          }
+          // 当月新房销量明细
+          let icon: iconDisplay = {
+            type: "Bottom",
+            color: "icon-green",
+            display: true,
+          };
+          if (currentDayData >= lastDayData) {
+            icon.type = "Top";
+            icon.color = "icon-red";
+          }
+          let newHouseEvent: eventItem = {
+            id: createEventId(val) + "new",
+            title: String(Math.abs(currentDayData - lastDayData)),
+            start: val,
+            textColor: "#ff666688",
+            borderColor: "#ffffff00",
+            backgroundColor: "#ffffff00",
+            extendedProps: icon,
+            // borderColor: "#ff666600",
+            // backgroundColor: "#ff666688",
+            //backgroundColor: "#ffffff",
+            //display: "none",
+          };
+          // 检查该数据是否已经存在
+          if (
+            initialEventsData.findIndex((val) => {
+              return val.id === newHouseEvent.id;
+            }) === -1
+          ) {
+            initialEventsData.push(newHouseEvent);
+          }
         }
       });
 
       // 当月二手房总计
-      if (currentMonthData.value != 0) {
+      if (currentMonthData.value == -1) {
         let lastDayofMonth = getLastDayOfMonth(
           date.getFullYear(),
           date.getMonth()
@@ -185,7 +218,7 @@ async function initialEventsFromRemote(date: Date) {
         }
       }
       // 当月新房总计
-      if (currentMonthNewData.value != 0) {
+      if (currentMonthNewData.value == -1) {
         let lastDayofMonth = getLastDayOfMonth(
           date.getFullYear(),
           date.getMonth()
@@ -248,6 +281,7 @@ const calendarOptions: any = reactive({
     dayGridPlugin,
     interactionPlugin, // needed for dateClick
     bootstrapPlugin,
+    listPlugin,
   ],
   customButtons: {
     myCustomButton: {
@@ -272,12 +306,22 @@ const calendarOptions: any = reactive({
       //titleFormat: { year: 'numeric', month: '2-digit', day: '2-digit' }
       // other view-specific options here
     },
+    timeGridFourDay: {
+      type: "timeGrid",
+      duration: { days: 4 },
+      buttonText: "4 day",
+    },
   },
+  //initialView: "listMonth",
+  initialView: "dayGridMonth",
   initialDate: new Date(),
   themeSystem: "bootstrap",
   showNonCurrentDates: false,
+  eventTextColor: "#00aa66",
   eventBorderColor: "#00000000",
-  eventColor: "#00aa6699",
+  eventColor: "#00000000",
+  //eventBorderColor: "#00000000",
+  //eventColor: "#00aa6699",
   eventOrder: "start",
   height: "auto",
   // contentHeight: 350,
@@ -285,7 +329,6 @@ const calendarOptions: any = reactive({
   firstDay: 1, // The day that each week begins. Sunday=0, Monday=1, Tuesday=2,
   fixedWeekCount: false,
   titleRangeSeparator: "-",
-  initialView: "dayGridMonth",
   initialEvents: initialEventsData, // alternatively, use the `events` setting to fetch from a feed
   editable: false,
   selectable: false,
@@ -334,9 +377,19 @@ onMounted(() => {
         :options="calendarOptions"
       >
         <template #eventContent="arg">
-          <div style="text-align: center">
-            <b>{{ arg.timeText }}</b>
-            <i>{{ arg.event.title }}</i>
+          <div style=" font-weight: 900;text-align: center">
+            <!-- <b>{{ arg.timeText }}</b> -->
+            <i
+              v-if="arg.event.extendedProps.display"
+              :class="arg.event.extendedProps.color"
+            >
+              <el-icon>
+                <component :is="arg.event.extendedProps.type" />
+                <!-- <Bottom /> -->
+              </el-icon>
+              {{ arg.event.title }}
+            </i>
+            <i v-else>{{ arg.event.title }}</i>
           </div>
         </template>
       </FullCalendar>
@@ -385,6 +438,16 @@ li {
 b {
   /* used for event dates/times */
   margin-right: 3px;
+}
+
+.icon-red {
+  font-weight: 100;
+  color: rgb(255 0 0 / 50%);
+}
+
+.icon-green {
+  font-weight: 100;
+  color: rgb(0 128 0 / 60%);
 }
 
 .demo-app {

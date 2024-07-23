@@ -18,9 +18,10 @@
 </template>
 
 <script setup lang="ts">
+import { useRoute } from "vue-router";
 import type { EpPropMergeType } from "element-plus/es/utils/vue/props/types";
 defineOptions({
-  name: "Dashboard",
+  name: "House",
   inheritAttrs: false,
 });
 
@@ -41,6 +42,15 @@ const chartComponent = (item: string) => {
   return defineAsyncComponent(() => import(`../components/${item}.vue`));
 };
 
+// 输出路由
+console.log("路由参数：");
+console.log(useRoute());
+
+let saleType: number = useRoute().query.type?.toString() as unknown as number;
+if (!saleType) {
+  saleType = 2;
+}
+
 async function handleQuery(dataType: number, dataDate: Date) {
   loading.value = true;
   await HouseAPI.getHouseData(dataType, dataDate)
@@ -53,7 +63,7 @@ async function handleQuery(dataType: number, dataDate: Date) {
 }
 
 onMounted(() => {
-  handleQuery(2, new Date());
+  handleQuery(saleType, new Date());
 });
 </script>
 

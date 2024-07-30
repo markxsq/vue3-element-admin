@@ -59,6 +59,7 @@
     "animate.css": "^4.1.1",
     "axios": "^1.7.2",
     "bootstrap": "^5.3.3",
+    "bootstrap-icons": "^1.11.3",
     "codemirror": "^5",
     "codemirror-editor-vue3": "^2.7.0",
     "color": "^4.2.3",

@@ -9,10 +9,9 @@ import listPlugin from "@fullcalendar/list";
 
 import HouseAPI from "@/api/house";
 import { ChartHouseDataVO } from "@/api/house/model";
-import { log } from "console";
-
 // install bootstrap@4 @fortawesome/fontawesome-free
 import "bootstrap/dist/css/bootstrap.css";
+import "bootstrap-icons/font/bootstrap-icons.css"; // needs additional webpack config!
 import "@fortawesome/fontawesome-free/css/all.css"; // needs additional webpack config!
 import { aN } from "@fullcalendar/core/internal-common";
 
@@ -315,7 +314,7 @@ const calendarOptions: any = reactive({
   //initialView: "listMonth",
   initialView: "dayGridMonth",
   initialDate: new Date(),
-  themeSystem: "bootstrap",
+  //themeSystem: "bootstrap",
   showNonCurrentDates: false,
   eventTextColor: "#00aa66",
   eventBorderColor: "#00000000",
@@ -377,7 +376,7 @@ onMounted(() => {
         :options="calendarOptions"
       >
         <template #eventContent="arg">
-          <div style=" font-weight: 900;text-align: center">
+          <div style="font-weight: 900; text-align: center">
             <!-- <b>{{ arg.timeText }}</b> -->
             <i
               v-if="arg.event.extendedProps.display"

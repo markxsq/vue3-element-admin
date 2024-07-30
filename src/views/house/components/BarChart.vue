@@ -6,15 +6,15 @@
         <b>{{ chartData.title.text }}</b>
       </div>
       <div class="title">
-        <el-text v-if="displayTitle"
-          >七日：{{ chartData.sevenDayAverage }}</el-text
-        >
-        <el-text v-if="displayTitle"
-          >半月：{{ chartData.fifteenDayAverage }}</el-text
-        >
-        <el-text v-if="displayTitle"
-          >近月：{{ chartData.thirtyDayAverage }}</el-text
-        >
+        <el-text v-if="displayTitle">
+          七日：{{ chartData.sevenDayAverage }}
+        </el-text>
+        <el-text v-if="displayTitle">
+          半月：{{ chartData.fifteenDayAverage }}
+        </el-text>
+        <el-text v-if="displayTitle">
+          近月：{{ chartData.thirtyDayAverage }}
+        </el-text>
         <el-text>单位：{{ chartData.title.unit }}</el-text>
       </div>
     </template>

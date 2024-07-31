@@ -9,14 +9,16 @@ import listPlugin from "@fullcalendar/list";
 
 import HouseAPI from "@/api/house";
 import { ChartHouseDataVO } from "@/api/house/model";
+
 // install bootstrap@4 @fortawesome/fontawesome-free
-import "bootstrap/dist/css/bootstrap.css";
-import "bootstrap-icons/font/bootstrap-icons.css"; // needs additional webpack config!
-import "@fortawesome/fontawesome-free/css/all.css"; // needs additional webpack config!
+// import "bootstrap/dist/css/bootstrap.css";
+// import "bootstrap-icons/font/bootstrap-icons.css"; // needs additional webpack config!
+// import "@fortawesome/fontawesome-free/css/all.css"; // needs additional webpack config!
 import { aN } from "@fullcalendar/core/internal-common";
 
 defineOptions({
-  name: "",
+  name: "ResoldCalendar",
+  inheritAttrs: false,
 });
 
 interface eventItem {
@@ -276,6 +278,7 @@ const handleViewWillUnmount = (info: any) => {
 
 const calendarOptions: any = reactive({
   locale: "zh-cn",
+  timeZone: "Asia/Shanghai",
   plugins: [
     dayGridPlugin,
     interactionPlugin, // needed for dateClick
@@ -314,7 +317,7 @@ const calendarOptions: any = reactive({
   //initialView: "listMonth",
   initialView: "dayGridMonth",
   initialDate: new Date(),
-  //themeSystem: "bootstrap",
+  //themeSystem: "bootstrap4",
   showNonCurrentDates: false,
   eventTextColor: "#00aa66",
   eventBorderColor: "#00000000",

@@ -21,7 +21,7 @@
 import { useRoute } from "vue-router";
 import type { EpPropMergeType } from "element-plus/es/utils/vue/props/types";
 defineOptions({
-  name: "House",
+  name: "Resold",
   inheritAttrs: false,
 });
 
